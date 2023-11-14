@@ -22,7 +22,7 @@ namespace TextureCleaning
         private void Update()
         {
             if (gridTree == null) return;
-        
+
             Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), out var raycastHit);
             if (raycastHit.collider != meshCollider) return;
 

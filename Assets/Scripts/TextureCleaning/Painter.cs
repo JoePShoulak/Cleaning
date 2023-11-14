@@ -27,8 +27,10 @@ namespace TextureCleaning
 
         private static void PaintPixel(int x, int y, int xOff, int yOff, Texture2D brush, Texture2D mask)
         {
-            var pX = Math.Clamp(xOff + x, 0, mask.width - 1);
-            var pY = Math.Clamp(yOff + y, 0, mask.height - 1);
+            const bool UV_WRAPPING = true;
+            
+            var pX = UV_WRAPPING ? xOff + x :  Math.Clamp(xOff + x, 0, mask.width - 1);
+            var pY = UV_WRAPPING ? yOff + y :  Math.Clamp(yOff + y, 0, mask.height - 1);
 
             var maskColor = mask.GetPixel(pX, pY);
             if (maskColor.r == 0) return;

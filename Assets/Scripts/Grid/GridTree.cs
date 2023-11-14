@@ -8,7 +8,7 @@ namespace Grid
         private readonly GridBox[,] gridBoxes;
         private Vector2Int gridSize;
 
-        public GridTree(Texture tex, Texture2D brush)
+        public GridTree(Texture tex, Texture brush)
         {
             var cellSize = new Vector2Int(brush.width / 2, brush.height / 2);
         
