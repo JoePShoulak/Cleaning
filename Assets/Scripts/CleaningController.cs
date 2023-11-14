@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class CleaningController : MonoBehaviour
@@ -9,8 +10,10 @@ public class CleaningController : MonoBehaviour
     [SerializeField] private Texture2D brush;
     private static readonly int MaskID = Shader.PropertyToID("_mask");
     [SerializeField] private float pollingRate = 0.1f;
-
-    private float startingDirtAmount;
+    [SerializeField] private int samplingFactor = 10;
+    private List<Vector2Int> dirtyPoints;
+    private int totalDirt;
+    private bool clean;
 
     public void Start()
     {
@@ -22,13 +25,25 @@ public class CleaningController : MonoBehaviour
         
         material.SetTexture(MaskID, dirtMaskTexture);
 
-        startingDirtAmount = GetDirtAmount(dirtMaskTexture);
+        dirtyPoints = new List<Vector2Int>();
+
+        for (var x = 0; x < dirtMaskTexture.width; x+=samplingFactor)
+        {
+            for (var y = 0; y < dirtMaskTexture.height; y+=samplingFactor)
+            {
+                dirtyPoints.Add(new Vector2Int(x, y));
+            }
+        }
+
+        totalDirt = dirtyPoints.Count;
 
         StartCoroutine(Polling());
     }
 
     private void Update()
     {
+        if (clean) return;
+        
         var hit = CheckForHit();
         if (hit == null) return;
 
@@ -37,7 +52,6 @@ public class CleaningController : MonoBehaviour
 
     IEnumerator Polling()
     {
-        bool clean;
         do
         {
             clean = CheckIfClean();
@@ -52,25 +66,11 @@ public class CleaningController : MonoBehaviour
         destination.Apply();
     }
 
-    private static float GetDirtAmount(Texture2D texture)
-    {
-        var dirt = 0f;
-        for (var x = 0; x < texture.width; x++)
-        {
-            for (var y = 0; y < texture.height; y++)
-            {
-                dirt += texture.GetPixel(x, y).r;
-            }
-        }
-
-        return dirt;
-    }
-
     private bool CheckIfClean()
     {
-        var currentDirt = GetDirtAmount(dirtMaskTexture);
-
-        var dirtFraction = currentDirt / startingDirtAmount;
+        dirtyPoints.RemoveAll(point => dirtMaskTexture.GetPixel(point.x, point.y).r == 0);
+        var dirtFraction = dirtyPoints.Count / (float)totalDirt;
+        
         Debug.Log(dirtFraction);
         return dirtFraction < .01;
     }
@@ -86,20 +86,28 @@ public class CleaningController : MonoBehaviour
         {
             for (var y = 0; y < brush.width * brushScale; y++)
             {
-                var pixelDirt = brush.GetPixel(x/brushScale, y/brushScale);
-                var pixelDirtMask = dirtMaskTexture.GetPixel(pixelXOffset + x, pixelYOffset + y);
                 
-                var channelValue = pixelDirt.g * pixelDirtMask.g;
-                var pixelColor = new Color(channelValue, channelValue, channelValue);
 
                 var pX = Math.Clamp(pixelXOffset + x, 0, dirtMaskTexture.width);
                 var pY = Math.Clamp(pixelYOffset + y, 0, dirtMaskTexture.height);
                 
-                dirtMaskTexture.SetPixel(pX, pY, pixelColor);
+                var dirtColor = brush.GetPixel(x/brushScale, y/brushScale);
+                var maskColor = dirtMaskTexture.GetPixel(pX, pY);
+                var channelValue = dirtColor.r * maskColor.r;
+                if (maskColor.r == 0) continue;
+                
+                PaintPixel(pX, pY, channelValue);
             }
         }
         
         dirtMaskTexture.Apply();
+    }
+
+    private void PaintPixel(int x, int y, float color)
+    {
+        var pixelColor = new Color(color, color, color);
+                
+        dirtMaskTexture.SetPixel(x, y, pixelColor);
     }
 
     private Vector2Int? CheckForHit()
