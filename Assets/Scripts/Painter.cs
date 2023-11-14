@@ -18,25 +18,36 @@ public static class Painter
         {
             for (var y = 0; y < textureManager.brush.width * brushScale; y++)
             {
-                PaintPixel(x, y, xOff, yOff, brushScale, textureManager.mask, textureManager.brush);
+                PaintPixel(x, y, xOff, yOff, brushScale, textureManager);
             }
         }
         
         textureManager.mask.Apply();
     }
 
-    private static void PaintPixel(int x, int y, int xOff, int yOff, int brushScale, Texture2D destination, Texture2D brush)
+    private static void PaintPixel(int x, int y, int xOff, int yOff, int brushScale, TextureManager textureManager)
     {
-        var pX = Math.Clamp(xOff + x, 0, destination.width - 1);
-        var pY = Math.Clamp(yOff + y, 0, destination.height - 1);
-                
-        var maskColor = destination.GetPixel(pX, pY);
+        var pX = Math.Clamp(xOff + x, 0, textureManager.mask.width - 1);
+        var pY = Math.Clamp(yOff + y, 0, textureManager.mask.height - 1);
+
+        var maskColor = textureManager.mask.GetPixel(pX, pY);
         if (maskColor.r == 0) return;
-                
-        var dirtColor = brush.GetPixel(x/brushScale, y/brushScale);
-        var channelValue = dirtColor.r * maskColor.r;
-        var pixelColor = new Color(channelValue, channelValue, channelValue);
-                
-        destination.SetPixel(pX, pY, pixelColor);
+
+        var dirtColor = textureManager.brush.GetPixel(x/brushScale, y/brushScale);
+        var newMaskAmount = dirtColor.r * maskColor.r;
+        var pixelColor = new Color(newMaskAmount, newMaskAmount, newMaskAmount);
+
+        textureManager.mask.SetPixel(pX, pY, pixelColor);
+    }
+
+    public static void Fill(TextureManager textureManager, Color color)
+    {
+        for (var x = 0; x < textureManager.mask.width; x++)
+        {
+            for (var y = 0; y < textureManager.mask.height; y++)
+            {
+                textureManager.mask.SetPixel(x, y, color);
+            }
+        }
     }
 }

@@ -3,10 +3,10 @@ using UnityEngine;
 
 public class TextureManager : MonoBehaviour
 {   
-    private static readonly int MaskID = Shader.PropertyToID("_mask");
     [HideInInspector] public Texture2D mask;
     public Texture2D brush;
-    [SerializeField] private int samplingFactor = 10;
+    
+    private static readonly int MaskID = Shader.PropertyToID("_mask");
 
     public void Start()
     {
@@ -24,7 +24,7 @@ public class TextureManager : MonoBehaviour
         destination.Apply();
     }
 
-    internal List<Vector2Int> SamplePoints(Texture tex)
+    internal static List<Vector2Int> SamplePoints(Texture tex, int samplingFactor)
     {
         var points = new List<Vector2Int>();
 
