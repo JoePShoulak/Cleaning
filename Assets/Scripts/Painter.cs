@@ -1,11 +1,9 @@
 using System;
 using UnityEngine;
 
-public sealed class Painter : MonoBehaviour
+public static class Painter
 {
-    [SerializeField] private Texture2D brush;
-
-    public void PaintHit(Vector2 texCoord, Texture2D destination)
+    public static void PaintHit(Vector2 texCoord, Texture2D destination, Texture2D brush)
     {
         var pixelX = (int)(texCoord.x * destination.width);
         var pixelY = (int)(texCoord.y * destination.height);
@@ -20,17 +18,17 @@ public sealed class Painter : MonoBehaviour
         {
             for (var y = 0; y < brush.width * brushScale; y++)
             {
-                PaintPixel(x, y, xOff, yOff, brushScale, destination);
+                PaintPixel(x, y, xOff, yOff, brushScale, destination, brush);
             }
         }
         
         destination.Apply();
     }
 
-    private void PaintPixel(int x, int y, int xOff, int yOff, int brushScale, Texture2D destination)
+    private static void PaintPixel(int x, int y, int xOff, int yOff, int brushScale, Texture2D destination, Texture2D brush)
     {
-        var pX = Math.Clamp(xOff + x, 0, destination.width);
-        var pY = Math.Clamp(yOff + y, 0, destination.height);
+        var pX = Math.Clamp(xOff + x, 0, destination.width - 1);
+        var pY = Math.Clamp(yOff + y, 0, destination.height - 1);
                 
         var maskColor = destination.GetPixel(pX, pY);
         if (maskColor.r == 0) return;

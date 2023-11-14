@@ -6,14 +6,13 @@ public sealed class CleanMonitor : MonoBehaviour
 {
     [SerializeField] private float pollingRate = 0.1f;
     [SerializeField] private int samplingFactor = 10;
-    
+    [SerializeField] private Texture2D brush;
+
     private static readonly int MaskID = Shader.PropertyToID("_mask");
     private Texture2D dirtMaskTexture;
     private List<Vector2Int> dirtyPoints;
     private int totalDirt;
     private bool clean;
-
-    private Painter painter;
 
     public void Start()
     {
@@ -27,9 +26,7 @@ public sealed class CleanMonitor : MonoBehaviour
 
         StartCoroutine(MonitorCleanStatus());
 
-        painter = GetComponent<Painter>();
-
-        RaycastListener.onRaycastHit += point => { painter.PaintHit(point, dirtMaskTexture); };
+        RaycastListener.onRaycastHit += point => { Painter.PaintHit(point, dirtMaskTexture, brush); };
     }
 
     private static void CopyTexture(Texture2D source, out Texture2D destination)
@@ -54,6 +51,11 @@ public sealed class CleanMonitor : MonoBehaviour
         return points;
     }
 
+    private void CleanUp()
+    {
+        GetComponent<RaycastListener>().enabled = false;
+    }
+
     private IEnumerator MonitorCleanStatus()
     {
         do
@@ -61,6 +63,8 @@ public sealed class CleanMonitor : MonoBehaviour
             clean = CheckIfClean();
             yield return new WaitForSecondsRealtime(pollingRate);
         } while (clean == false);
+        
+        CleanUp();
     }
 
     private bool CheckIfClean()
