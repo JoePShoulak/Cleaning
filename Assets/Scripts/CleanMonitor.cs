@@ -7,20 +7,18 @@ public sealed class CleanMonitor : MonoBehaviour
     [SerializeField] private float pollingRate = 0.1f;
     [SerializeField] private int samplingFactor = 10;
 
-    private TextureManager textureManager;
+    private TextureManager texManager;
     private List<Vector2Int> dirtyPoints;
     private int totalDirt;
     private bool clean;
     
-    public void Start()
+    private void Start()
     {
-        textureManager = GetComponent<TextureManager>();
-        dirtyPoints = TextureManager.SamplePoints(textureManager.mask, samplingFactor);
+        texManager = GetComponent<TextureManager>();
+        dirtyPoints = TextureManager.SamplePoints(texManager.mask, samplingFactor);
         totalDirt = dirtyPoints.Count;
 
         StartCoroutine(MonitorCleanStatus());
-
-        RaycastListener.onRaycastHit += point => { Painter.PaintHit(point, textureManager); };
     }
 
     private IEnumerator MonitorCleanStatus()
@@ -38,7 +36,7 @@ public sealed class CleanMonitor : MonoBehaviour
 
     private bool CheckIfClean()
     {
-        dirtyPoints.RemoveAll(point => textureManager.mask.GetPixel(point.x, point.y).r == 0);
+        dirtyPoints.RemoveAll(point => texManager.mask.GetPixel(point.x, point.y).r == 0);
         var dirtFraction = dirtyPoints.Count / (float)totalDirt;
         
         Debug.Log(dirtFraction);
@@ -47,7 +45,7 @@ public sealed class CleanMonitor : MonoBehaviour
 
     private void Cleanup()
     {
-        Painter.Fill(textureManager, Color.black);
+        Painter.Fill(texManager, Color.black);
         Debug.Log("Item is clean!");
     }
 }

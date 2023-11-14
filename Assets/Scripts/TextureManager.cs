@@ -8,7 +8,7 @@ public class TextureManager : MonoBehaviour
     
     private static readonly int MaskID = Shader.PropertyToID("_mask");
 
-    public void Start()
+    public void Awake()
     {
         var material = GetComponent<MeshRenderer>().material;
         var sourceTex = (Texture2D)material.GetTexture(MaskID);
