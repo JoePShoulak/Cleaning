@@ -29,19 +29,14 @@ public sealed class CleaningController : MonoBehaviour
 
         painter = GetComponent<Painter>();
 
-        RaycastListener.onRaycastHit += TriggerPaint;
+        RaycastListener.onRaycastHit += point => { painter.PaintHit(point, dirtMaskTexture); };
     }
 
-    private void CopyTexture(Texture2D source, out Texture2D destination)
+    private static void CopyTexture(Texture2D source, out Texture2D destination)
     {
         destination = new Texture2D(source.width, source.height);
         destination.SetPixels(source.GetPixels());
         destination.Apply();
-    }
-
-    private void TriggerPaint(Vector2 point)
-    {
-        painter.PaintHit(point, dirtMaskTexture);
     }
 
     private List<Vector2Int> SamplePoints(Texture tex)
