@@ -11,8 +11,8 @@ public class GridTree
     {
         tex = _tex;
         
-        gridSize.x = (int)Math.Ceiling(tex.width / (float)brush.width);
-        gridSize.y = (int)Math.Ceiling(tex.height / (float)brush.height);
+        gridSize.x = (int)Math.Ceiling(tex.width / (brush.width/2f));
+        gridSize.y = (int)Math.Ceiling(tex.height / (brush.height/2f));
         
         gridBoxes = new GridBox[gridSize.x,gridSize.y];
         Debug.Log("Height " + gridSize.y + ", Width " + gridSize.x);
@@ -21,25 +21,25 @@ public class GridTree
         {
             for (var y = 0; y < gridSize.y; y++)
             {
-                gridBoxes[x,y] = new GridBox(x, y, brush.width, brush.height);
+                gridBoxes[x,y] = new GridBox(x, y,brush.width/2, brush.height/2);
                 gridBoxes[x,y].PaintBox(tex, new Color(x/(float)gridSize.x, y/(float)gridSize.y, 0.5f));
             }
         }
     }
 
-    public bool CheckIfClean(Texture2D _maskTex, Texture2D _displayTex)
+    public float GetCleanFraction(Texture2D _maskTex, Texture2D _displayTex)
     {
-        var anyDirty = false;
+        var dirtyCells = 0;
         
         for (var x = 0; x < gridSize.x; x++)
         {
             for (var y = 0; y < gridSize.y; y++)
             {
-                if (!gridBoxes[x, y].CheckIfClean(_maskTex, _displayTex)) anyDirty = true;
+                if (!gridBoxes[x, y].CheckIfClean(_maskTex, _displayTex)) dirtyCells++;
             }
         }
 
-        return !anyDirty;
+        return (float)dirtyCells / (gridSize.x * gridSize.y);
     }
 }
 
@@ -49,6 +49,9 @@ public class GridBox
     private Vector2Int position;
     private Vector2Int size;
     private bool clean;
+    
+    private const float dirtThreshold = 0.05f;
+
     
     public GridBox(int _x, int _y, int _width, int _height)
     {
@@ -80,30 +83,34 @@ public class GridBox
         tex.Apply();
     }
 
-    public bool CheckIfClean(Texture2D _maskTex, Texture2D _displayTex)
+    public bool IsDirty(Texture2D _maskTex)
     {
-        var anyDirty = false;
+        var dirtCount = 0;
+        var dirtLimit = size.x * size.y * dirtThreshold;
         
         for (var x = 0; x < size.x; x++)
         {
             for (var y = 0; y < size.y; y++)
             {
-                var point = points[x, y];
-                
-                if (_maskTex.GetPixel(point.x, point.y).r > 0) anyDirty = true;
-            }
-        } 
-        
-        clean = !anyDirty;
+                if (dirtCount > dirtLimit) return true;
 
-        if (clean)
-        {
-            PaintBox(_displayTex, Color.white);
-            Debug.Log("Cell is clean!");
+                var point = points[x, y];
+                if (_maskTex.GetPixel(point.x, point.y).r > 0) dirtCount++;
+            }
         }
-        
-        return clean;
+
+        return false;
     }
 
- 
+    public bool CheckIfClean(Texture2D _maskTex, Texture2D _displayTex)
+    {
+        if (clean) return true;
+
+        if (IsDirty(_maskTex)) return false;
+
+        clean = true;
+        PaintBox(_displayTex, Color.white);
+        
+        return true;
+    }
 }

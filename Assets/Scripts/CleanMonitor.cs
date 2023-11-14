@@ -43,12 +43,10 @@ public sealed class CleanMonitor : MonoBehaviour
 
     private bool CheckIfClean()
     {
-        dirtyPoints.RemoveAll(point => texManager.mask.GetPixel(point.x, point.y).r == 0);
-        Debug.Log("Tree Check: " + gridTree.CheckIfClean(texManager.mask, treeDisplayTex));
-        var dirtFraction = dirtyPoints.Count / (float)totalDirt;
+        var gridTreeProgress = gridTree.GetCleanFraction(texManager.mask, treeDisplayTex);
+        Debug.Log("Tree Check: " + gridTreeProgress);
         
-        Debug.Log(dirtFraction);
-        return dirtFraction < .01;
+        return gridTreeProgress == 0;
     }
 
     private void Cleanup()
