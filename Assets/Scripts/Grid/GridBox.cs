@@ -36,7 +36,7 @@ namespace Grid
             if (IsDirty(tex)) return false;
 
             clean = true;
-            PaintCell(tex, Color.black);
+            PaintCell(tex, Color.black); // TODO: This is noticeable, keep it?
             return true;
         }
 
