@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Grid;
 using UnityEngine;
 
 public sealed class CleanMonitor : MonoBehaviour
@@ -10,7 +11,6 @@ public sealed class CleanMonitor : MonoBehaviour
     private List<Vector2Int> dirtyPoints;
     private bool clean;
     
-    [SerializeField] private MeshRenderer treeDisplayRenderer;
     private Texture2D treeDisplayTex;
     private GridTree gridTree;
 
@@ -21,8 +21,7 @@ public sealed class CleanMonitor : MonoBehaviour
         texManager = GetComponent<TextureManager>();
         raycastListener = GetComponent<RaycastListener>();
 
-        treeDisplayTex = (Texture2D)treeDisplayRenderer.material.mainTexture;
-        gridTree = new GridTree(treeDisplayTex, texManager.brush);
+        gridTree = new GridTree(texManager.mask, texManager.brush);
         raycastListener.gridTree = gridTree;
 
         StartCoroutine(MonitorCleanStatus());
@@ -51,7 +50,6 @@ public sealed class CleanMonitor : MonoBehaviour
 
     private void Cleanup()
     {
-        Painter.Fill(texManager, Color.black);
         Debug.Log("Item is clean!");
         raycastListener.enabled = false;
     }
