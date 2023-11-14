@@ -3,14 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CleaningController : MonoBehaviour
+public sealed class CleaningController : MonoBehaviour
 {
     private Camera cam;
-    private Texture2D dirtMaskTexture;
-    [SerializeField] private Texture2D brush;
-    private static readonly int MaskID = Shader.PropertyToID("_mask");
+    
     [SerializeField] private float pollingRate = 0.1f;
     [SerializeField] private int samplingFactor = 10;
+    [SerializeField] private Texture2D brush;
+    
+    private static readonly int MaskID = Shader.PropertyToID("_mask");
+    private Texture2D dirtMaskTexture;
     private List<Vector2Int> dirtyPoints;
     private int totalDirt;
     private bool clean;
@@ -24,20 +26,25 @@ public class CleaningController : MonoBehaviour
         CopyTexture(originalTexture, out dirtMaskTexture);
         
         material.SetTexture(MaskID, dirtMaskTexture);
+        dirtyPoints = SamplePoints(dirtMaskTexture);
+        totalDirt = dirtyPoints.Count;
 
-        dirtyPoints = new List<Vector2Int>();
+        StartCoroutine(MonitorCleanStatus());
+    }
 
-        for (var x = 0; x < dirtMaskTexture.width; x+=samplingFactor)
+    private List<Vector2Int> SamplePoints(Texture tex)
+    {
+        var points = new List<Vector2Int>();
+
+        for (var x = 0; x < tex.width; x+=samplingFactor)
         {
-            for (var y = 0; y < dirtMaskTexture.height; y+=samplingFactor)
+            for (var y = 0; y < tex.height; y+=samplingFactor)
             {
-                dirtyPoints.Add(new Vector2Int(x, y));
+                points.Add(new Vector2Int(x, y));
             }
         }
 
-        totalDirt = dirtyPoints.Count;
-
-        StartCoroutine(Polling());
+        return points;
     }
 
     private void Update()
@@ -50,7 +57,7 @@ public class CleaningController : MonoBehaviour
         PaintHit((Vector2Int)hit);
     }
 
-    IEnumerator Polling()
+    private IEnumerator MonitorCleanStatus()
     {
         do
         {
@@ -79,49 +86,44 @@ public class CleaningController : MonoBehaviour
     {
         const int brushScale = 3;
         
-        var pixelXOffset = hit.x - brush.width / 2 * brushScale;
-        var pixelYOffset = hit.y - brush.height / 2 * brushScale;
+        var xOff = hit.x - brush.width / 2 * brushScale;
+        var yOff = hit.y - brush.height / 2 * brushScale;
 
         for (var x = 0; x < brush.width * brushScale; x++)
         {
             for (var y = 0; y < brush.width * brushScale; y++)
             {
-                
-
-                var pX = Math.Clamp(pixelXOffset + x, 0, dirtMaskTexture.width);
-                var pY = Math.Clamp(pixelYOffset + y, 0, dirtMaskTexture.height);
-                
-                var dirtColor = brush.GetPixel(x/brushScale, y/brushScale);
-                var maskColor = dirtMaskTexture.GetPixel(pX, pY);
-                var channelValue = dirtColor.r * maskColor.r;
-                if (maskColor.r == 0) continue;
-                
-                PaintPixel(pX, pY, channelValue);
+                PaintPixel(x, y, xOff, yOff, brushScale);
             }
         }
         
         dirtMaskTexture.Apply();
     }
 
-    private void PaintPixel(int x, int y, float color)
+    private void PaintPixel(int x, int y, int xOff, int yOff, int brushScale)
     {
-        var pixelColor = new Color(color, color, color);
+        var pX = Math.Clamp(xOff + x, 0, dirtMaskTexture.width);
+        var pY = Math.Clamp(yOff + y, 0, dirtMaskTexture.height);
                 
-        dirtMaskTexture.SetPixel(x, y, pixelColor);
+        var maskColor = dirtMaskTexture.GetPixel(pX, pY);
+        if (maskColor.r == 0) return;
+                
+        var dirtColor = brush.GetPixel(x/brushScale, y/brushScale);
+        var channelValue = dirtColor.r * maskColor.r;
+        var pixelColor = new Color(channelValue, channelValue, channelValue);
+                
+        dirtMaskTexture.SetPixel(pX, pY, pixelColor);
     }
 
     private Vector2Int? CheckForHit()
     {
         Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), out var raycastHit);
         if (raycastHit.collider == null) return null;
-        
-        var textureCoord = raycastHit.textureCoord;
             
+        var textureCoord = raycastHit.textureCoord;
         var pixelX = (int)(textureCoord.x * dirtMaskTexture.width);
         var pixelY = (int)(textureCoord.y * dirtMaskTexture.height);
             
-        var paintPixelPosition = new Vector2Int(pixelX, pixelY);
-
-        return paintPixelPosition;
+        return new Vector2Int(pixelX, pixelY);
     }
 }

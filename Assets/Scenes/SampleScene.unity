@@ -428,4 +428,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b373ef2d6d878f439234cfe03627df9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  pollingRate: 0.1
+  samplingFactor: 10
   brush: {fileID: 2800000, guid: 4c950664f13170b48a0288c19708b25d, type: 3}
