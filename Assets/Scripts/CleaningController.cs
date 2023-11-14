@@ -27,7 +27,12 @@ public sealed class CleaningController : MonoBehaviour
 
         StartCoroutine(MonitorCleanStatus());
 
-        RaycastListener.onRaycastHit += PaintHit;
+        RaycastListener.onRaycastHit += TriggerPaint;
+    }
+
+    private void TriggerPaint(Vector2 point)
+    {
+        Painter.PaintHit(point, brush, dirtMaskTexture);
     }
 
     private List<Vector2Int> SamplePoints(Texture tex)
@@ -70,40 +75,5 @@ public sealed class CleaningController : MonoBehaviour
         return dirtFraction < .01;
     }
 
-    private void PaintHit(Vector2 texCoord)
-    {
-        var pixelX = (int)(texCoord.x * dirtMaskTexture.width);
-        var pixelY = (int)(texCoord.y * dirtMaskTexture.height);
-        var hit = new Vector2Int(pixelX, pixelY);
-        
-        const int brushScale = 3;
-        
-        var xOff = hit.x - brush.width / 2 * brushScale;
-        var yOff = hit.y - brush.height / 2 * brushScale;
 
-        for (var x = 0; x < brush.width * brushScale; x++)
-        {
-            for (var y = 0; y < brush.width * brushScale; y++)
-            {
-                PaintPixel(x, y, xOff, yOff, brushScale);
-            }
-        }
-        
-        dirtMaskTexture.Apply();
-    }
-
-    private void PaintPixel(int x, int y, int xOff, int yOff, int brushScale)
-    {
-        var pX = Math.Clamp(xOff + x, 0, dirtMaskTexture.width);
-        var pY = Math.Clamp(yOff + y, 0, dirtMaskTexture.height);
-                
-        var maskColor = dirtMaskTexture.GetPixel(pX, pY);
-        if (maskColor.r == 0) return;
-                
-        var dirtColor = brush.GetPixel(x/brushScale, y/brushScale);
-        var channelValue = dirtColor.r * maskColor.r;
-        var pixelColor = new Color(channelValue, channelValue, channelValue);
-                
-        dirtMaskTexture.SetPixel(pX, pY, pixelColor);
-    }
 }
