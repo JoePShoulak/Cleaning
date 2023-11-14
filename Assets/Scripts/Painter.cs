@@ -1,9 +1,11 @@
 using System;
 using UnityEngine;
 
-public class Painter : MonoBehaviour
+public sealed class Painter : MonoBehaviour
 {
-    public static void PaintHit(Vector2 texCoord, Texture2D brush, Texture2D destination)
+    [SerializeField] private Texture2D brush;
+
+    public void PaintHit(Vector2 texCoord, Texture2D destination)
     {
         var pixelX = (int)(texCoord.x * destination.width);
         var pixelY = (int)(texCoord.y * destination.height);
@@ -18,14 +20,14 @@ public class Painter : MonoBehaviour
         {
             for (var y = 0; y < brush.width * brushScale; y++)
             {
-                PaintPixel(x, y, xOff, yOff, brushScale, brush, destination);
+                PaintPixel(x, y, xOff, yOff, brushScale, destination);
             }
         }
         
         destination.Apply();
     }
 
-    private static void PaintPixel(int x, int y, int xOff, int yOff, int brushScale, Texture2D brush, Texture2D destination)
+    private void PaintPixel(int x, int y, int xOff, int yOff, int brushScale, Texture2D destination)
     {
         var pX = Math.Clamp(xOff + x, 0, destination.width);
         var pY = Math.Clamp(yOff + y, 0, destination.height);

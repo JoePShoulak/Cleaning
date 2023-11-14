@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,13 +6,14 @@ public sealed class CleaningController : MonoBehaviour
 {
     [SerializeField] private float pollingRate = 0.1f;
     [SerializeField] private int samplingFactor = 10;
-    [SerializeField] private Texture2D brush;
     
     private static readonly int MaskID = Shader.PropertyToID("_mask");
     private Texture2D dirtMaskTexture;
     private List<Vector2Int> dirtyPoints;
     private int totalDirt;
     private bool clean;
+
+    private Painter painter;
 
     public void Start()
     {
@@ -27,12 +27,21 @@ public sealed class CleaningController : MonoBehaviour
 
         StartCoroutine(MonitorCleanStatus());
 
+        painter = GetComponent<Painter>();
+
         RaycastListener.onRaycastHit += TriggerPaint;
+    }
+
+    private void CopyTexture(Texture2D source, out Texture2D destination)
+    {
+        destination = new Texture2D(source.width, source.height);
+        destination.SetPixels(source.GetPixels());
+        destination.Apply();
     }
 
     private void TriggerPaint(Vector2 point)
     {
-        Painter.PaintHit(point, brush, dirtMaskTexture);
+        painter.PaintHit(point, dirtMaskTexture);
     }
 
     private List<Vector2Int> SamplePoints(Texture tex)
@@ -59,13 +68,6 @@ public sealed class CleaningController : MonoBehaviour
         } while (clean == false);
     }
 
-    private void CopyTexture(Texture2D source, out Texture2D destination)
-    {
-        destination = new Texture2D(source.width, source.height);
-        destination.SetPixels(source.GetPixels());
-        destination.Apply();
-    }
-
     private bool CheckIfClean()
     {
         dirtyPoints.RemoveAll(point => dirtMaskTexture.GetPixel(point.x, point.y).r == 0);
@@ -74,6 +76,4 @@ public sealed class CleaningController : MonoBehaviour
         Debug.Log(dirtFraction);
         return dirtFraction < .01;
     }
-
-
 }
