@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public sealed class CleaningController : MonoBehaviour
+public sealed class CleanMonitor : MonoBehaviour
 {
     [SerializeField] private float pollingRate = 0.1f;
     [SerializeField] private int samplingFactor = 10;
@@ -18,8 +18,8 @@ public sealed class CleaningController : MonoBehaviour
     public void Start()
     {
         var material = GetComponent<MeshRenderer>().material;
-        var originalTexture = (Texture2D)material.GetTexture(MaskID);
-        CopyTexture(originalTexture, out dirtMaskTexture);
+        var sourceTex = (Texture2D)material.GetTexture(MaskID);
+        CopyTexture(sourceTex, out dirtMaskTexture);
         
         material.SetTexture(MaskID, dirtMaskTexture);
         dirtyPoints = SamplePoints(dirtMaskTexture);
