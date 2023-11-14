@@ -3,26 +3,26 @@ using UnityEngine;
 
 public static class Painter
 {
-    public static void PaintHit(Vector2 texCoord, Texture2D destination, Texture2D brush)
+    public static void PaintHit(Vector2 texCoord, TextureManager textureManager)
     {
-        var pixelX = (int)(texCoord.x * destination.width);
-        var pixelY = (int)(texCoord.y * destination.height);
+        var pixelX = (int)(texCoord.x * textureManager.mask.width);
+        var pixelY = (int)(texCoord.y * textureManager.mask.height);
         var hit = new Vector2Int(pixelX, pixelY);
         
         const int brushScale = 3;
         
-        var xOff = hit.x - brush.width / 2 * brushScale;
-        var yOff = hit.y - brush.height / 2 * brushScale;
+        var xOff = hit.x - textureManager.brush.width / 2 * brushScale;
+        var yOff = hit.y - textureManager.brush.height / 2 * brushScale;
 
-        for (var x = 0; x < brush.width * brushScale; x++)
+        for (var x = 0; x < textureManager.brush.width * brushScale; x++)
         {
-            for (var y = 0; y < brush.width * brushScale; y++)
+            for (var y = 0; y < textureManager.brush.width * brushScale; y++)
             {
-                PaintPixel(x, y, xOff, yOff, brushScale, destination, brush);
+                PaintPixel(x, y, xOff, yOff, brushScale, textureManager.mask, textureManager.brush);
             }
         }
         
-        destination.Apply();
+        textureManager.mask.Apply();
     }
 
     private static void PaintPixel(int x, int y, int xOff, int yOff, int brushScale, Texture2D destination, Texture2D brush)

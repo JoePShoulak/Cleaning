@@ -5,55 +5,23 @@ using UnityEngine;
 public sealed class CleanMonitor : MonoBehaviour
 {
     [SerializeField] private float pollingRate = 0.1f;
-    [SerializeField] private int samplingFactor = 10;
-    [SerializeField] private Texture2D brush;
 
-    private static readonly int MaskID = Shader.PropertyToID("_mask");
-    private Texture2D dirtMaskTexture;
     private List<Vector2Int> dirtyPoints;
     private int totalDirt;
     private bool clean;
 
+    private TextureManager _textureManager;
+    
     public void Start()
     {
-        var material = GetComponent<MeshRenderer>().material;
-        var sourceTex = (Texture2D)material.GetTexture(MaskID);
-        CopyTexture(sourceTex, out dirtMaskTexture);
+        _textureManager = GetComponent<TextureManager>();
         
-        material.SetTexture(MaskID, dirtMaskTexture);
-        dirtyPoints = SamplePoints(dirtMaskTexture);
+        dirtyPoints = _textureManager.SamplePoints(_textureManager.mask);
         totalDirt = dirtyPoints.Count;
 
         StartCoroutine(MonitorCleanStatus());
 
-        RaycastListener.onRaycastHit += point => { Painter.PaintHit(point, dirtMaskTexture, brush); };
-    }
-
-    private static void CopyTexture(Texture2D source, out Texture2D destination)
-    {
-        destination = new Texture2D(source.width, source.height);
-        destination.SetPixels(source.GetPixels());
-        destination.Apply();
-    }
-
-    private List<Vector2Int> SamplePoints(Texture tex)
-    {
-        var points = new List<Vector2Int>();
-
-        for (var x = 0; x < tex.width; x+=samplingFactor)
-        {
-            for (var y = 0; y < tex.height; y+=samplingFactor)
-            {
-                points.Add(new Vector2Int(x, y));
-            }
-        }
-
-        return points;
-    }
-
-    private void CleanUp()
-    {
-        GetComponent<RaycastListener>().enabled = false;
+        RaycastListener.onRaycastHit += point => { Painter.PaintHit(point, _textureManager); };
     }
 
     private IEnumerator MonitorCleanStatus()
@@ -63,13 +31,11 @@ public sealed class CleanMonitor : MonoBehaviour
             clean = CheckIfClean();
             yield return new WaitForSecondsRealtime(pollingRate);
         } while (clean == false);
-        
-        CleanUp();
     }
 
     private bool CheckIfClean()
     {
-        dirtyPoints.RemoveAll(point => dirtMaskTexture.GetPixel(point.x, point.y).r == 0);
+        dirtyPoints.RemoveAll(point => _textureManager.mask.GetPixel(point.x, point.y).r == 0);
         var dirtFraction = dirtyPoints.Count / (float)totalDirt;
         
         Debug.Log(dirtFraction);
