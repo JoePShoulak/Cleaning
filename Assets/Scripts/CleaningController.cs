@@ -22,9 +22,17 @@ public class CleaningController : MonoBehaviour
         
         material.SetTexture(MaskID, dirtMaskTexture);
 
-        startingDirtAmount = GetDirtAmount(originalTexture);
+        startingDirtAmount = GetDirtAmount(dirtMaskTexture);
 
         StartCoroutine(Polling());
+    }
+
+    private void Update()
+    {
+        var hit = CheckForHit();
+        if (hit == null) return;
+
+        PaintHit((Vector2Int)hit);
     }
 
     IEnumerator Polling()
@@ -56,16 +64,6 @@ public class CleaningController : MonoBehaviour
         }
 
         return dirt;
-    }
-
-    private void Update()
-    {
-        var hit = CheckForHit();
-        if (hit == null) return;
-
-        PaintHit((Vector2Int)hit);
-
-        // CheckIfClean();
     }
 
     private bool CheckIfClean()
