@@ -27,7 +27,25 @@ public class GridTree
         }
     }
 
-    public float GetCleanFraction(Texture2D _maskTex, Texture2D _displayTex)
+    public void RegisterHit(Vector2 texCoords)
+    {
+        var x = (int)Math.Floor(texCoords.x * gridSize.x);
+        var y = (int)Math.Floor(texCoords.y * gridSize.y);
+
+        for (var _x = x - 1; _x <= x + 1; _x++)
+        { 
+            for (var _y = y - 1; _y <= y + 1; _y++)
+            {
+                if (_x >= 0 && _x < gridSize.x && _y >= 0 && _y < gridSize.y)
+                {
+                    gridBoxes[_x, _y].shouldCheckForClean = true;
+                }
+            }
+        }
+        
+    }
+
+    public float GetDirtyFraction(Texture2D _maskTex)
     {
         var dirtyCells = 0;
         
@@ -35,7 +53,9 @@ public class GridTree
         {
             for (var y = 0; y < gridSize.y; y++)
             {
-                if (!gridBoxes[x, y].CheckIfClean(_maskTex, _displayTex)) dirtyCells++;
+                var box = gridBoxes[x, y];
+                
+                if (!box.CheckIfClean(_maskTex, tex)) dirtyCells++;
             }
         }
 
@@ -49,9 +69,9 @@ public class GridBox
     private Vector2Int position;
     private Vector2Int size;
     private bool clean;
+    public bool shouldCheckForClean;
     
     private const float dirtThreshold = 0.05f;
-
     
     public GridBox(int _x, int _y, int _width, int _height)
     {
@@ -83,7 +103,7 @@ public class GridBox
         tex.Apply();
     }
 
-    public bool IsDirty(Texture2D _maskTex)
+    private bool IsDirty(Texture2D _maskTex)
     {
         var dirtCount = 0;
         var dirtLimit = size.x * size.y * dirtThreshold;
@@ -106,6 +126,9 @@ public class GridBox
     {
         if (clean) return true;
 
+        if (!shouldCheckForClean) return false;
+
+        shouldCheckForClean = false;
         if (IsDirty(_maskTex)) return false;
 
         clean = true;

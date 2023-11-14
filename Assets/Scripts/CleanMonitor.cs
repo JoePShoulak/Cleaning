@@ -5,25 +5,25 @@ using UnityEngine;
 public sealed class CleanMonitor : MonoBehaviour
 {
     [SerializeField] private float pollingRate = 0.1f;
-    [SerializeField] private int samplingFactor = 10;
     
     private TextureManager texManager;
     private List<Vector2Int> dirtyPoints;
-    private int totalDirt;
     private bool clean;
     
     [SerializeField] private MeshRenderer treeDisplayRenderer;
     private Texture2D treeDisplayTex;
     private GridTree gridTree;
+
+    private RaycastListener raycastListener;
     
     private void Start()
     {
         texManager = GetComponent<TextureManager>();
-        dirtyPoints = TextureManager.SamplePoints(texManager.mask, samplingFactor);
-        totalDirt = dirtyPoints.Count;
+        raycastListener = GetComponent<RaycastListener>();
 
         treeDisplayTex = (Texture2D)treeDisplayRenderer.material.mainTexture;
         gridTree = new GridTree(treeDisplayTex, texManager.brush);
+        raycastListener.gridTree = gridTree;
 
         StartCoroutine(MonitorCleanStatus());
     }
@@ -43,15 +43,16 @@ public sealed class CleanMonitor : MonoBehaviour
 
     private bool CheckIfClean()
     {
-        var gridTreeProgress = gridTree.GetCleanFraction(texManager.mask, treeDisplayTex);
+        var gridTreeProgress = 1-gridTree.GetDirtyFraction(texManager.mask);
         Debug.Log("Tree Check: " + gridTreeProgress);
         
-        return gridTreeProgress == 0;
+        return gridTreeProgress >= 1f;
     }
 
     private void Cleanup()
     {
         Painter.Fill(texManager, Color.black);
         Debug.Log("Item is clean!");
+        raycastListener.enabled = false;
     }
 }

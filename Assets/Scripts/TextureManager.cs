@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 public class TextureManager : MonoBehaviour
@@ -22,20 +21,5 @@ public class TextureManager : MonoBehaviour
         destination = new Texture2D(source.width, source.height);
         destination.SetPixels(source.GetPixels());
         destination.Apply();
-    }
-
-    internal static List<Vector2Int> SamplePoints(Texture tex, int samplingFactor)
-    {
-        var points = new List<Vector2Int>();
-
-        for (var x = 0; x < tex.width; x+=samplingFactor)
-        {
-            for (var y = 0; y < tex.height; y+=samplingFactor)
-            {
-                points.Add(new Vector2Int(x, y));
-            }
-        }
-
-        return points;
     }
 }
