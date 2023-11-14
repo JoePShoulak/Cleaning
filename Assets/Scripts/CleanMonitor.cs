@@ -25,12 +25,14 @@ public sealed class CleanMonitor : MonoBehaviour
 
     private IEnumerator MonitorCleanStatus()
     {
-        while (clean == false)
+        for (;;)
         {
             clean = CheckIfClean();
+            if (clean) break;
+            
             yield return new WaitForSecondsRealtime(pollingRate);
         }
-
+        
         Cleanup();
     }
 
